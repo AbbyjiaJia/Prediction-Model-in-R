@@ -51,3 +51,93 @@ yhat_k_split<-knn(new_train_x,new_test_x,new_train_y,k=n)
 mean(yhat_k_split!=new_test_y)
 
 
+# Linear and Quadratic Discriminant Analysis
+library(mass)
+library(tidyverse)
+library(ggplot)
+
+# 1. Test data and Train data in 2 dataframes
+# Training data
+training_data <- readRDS('Training Data.rds')
+test_data <- readRDS('Test Data.rds')
+
+# LDA
+lda_output <- lda( Y ~ X, data = training_data)
+# Predict LDA
+yhat_lda <- predict(lda_output, newdata = test_data)
+# Prediction
+yhat_lda$class
+# Calculate Probabilities
+yhat_lda$posterior
+
+# QDA
+qda_output <- qda( Y ~ X, data = training_data) # X is(are) independence variable(s)
+# Predict QDA
+yhat_qda <- predict(qda_output, newdata = test_data)
+# Calculate Probabilities
+yhat_qda$posterior
+
+# 2. Test data and Train data in one dataframe
+Data <- readRDS('Training Data.rds')
+# Split data
+ind<-ifelse(runif(n)<0.7,"Training","Test") # n= row number
+
+# Add Column
+Data_with_Sample<-add_column(Data,Sample=ind)
+
+# Training Data
+train_data<-Data_with_Sample%>%
+filter(Sample=="Training")%>%
+select(-Sample) #Can remove Sample variable
+
+# Test Data
+test_data<-Data_with_Sample%>%
+filter(Sample=="Test")%>%
+select(-Sample) #Can remove Sample variable
+
+# LDA
+lda_output <- lda( Y ~ X, data = train_data) # X is(are) independence variable(s)
+# Prediction
+yhat_lda <- predict(lda_output, newdata = test_data)
+# Misclassification
+mean(yhat_lda$class != test_data$Y) # Y is dependence variable
+
+# QDA
+qda_output <- qda( Y ~ X, data = train_data)
+# Prediction
+yhat_qda <- predict(qda_output, newdata = test_data)
+# Misclassification
+mean(yhat_qda$class != test_data$Y)
+# Probanilities
+yhat_qda$posterior
+# Cross table
+table(yhat_lda$class != test_data$Y)
+table(yhat_lda$class != yhat_qda$class)
+
+
+# Decision Tree
+library(rpart)
+library(tidyverse)
+library(rpart.plot)
+
+# 1. Test data & Training data in 2 different dataframes
+# Training data
+training_data<-readRDS('TrainingData.rds')
+# Test Data
+test_data<-readRDS('TestData.rds')
+
+# Tree plot
+tree<- rpart( Y ~ X, data = training_data) # only one indenpdent variable
+tree<- rpart( Y ~ ., data = training_data) # Except one dependent variable, others are all independent variables
+
+# Predict Tree
+yhat<-predict(tree, newdata = test_data, type = 'class')
+
+# Plot decision tree
+rpart.plot(tree)
+
+# Tree with Minimum Observation
+tree15<-rpart(Y ~ X, data = training_data, control = rpart.control(minbucket = 15))
+
+# Predict tree
+yhat15<-predict(tree15, newdata = test_data, type = 'class')
