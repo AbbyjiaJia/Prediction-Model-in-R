@@ -1,0 +1,53 @@
+# KNN
+library(dplyr)
+library(class)
+
+
+# Train x -> Independence variables
+
+# Train X scale
+train_x<- TrainData%>%
+dplyr::select(-Y) %>% 
+scale()
+
+#Mean train x
+mean_train_x<-attr(train_x,"scaled:center")
+
+# Std Dev train x
+std_train_x<-attr(train_x,"scaled:scale")
+
+#Train Y -> Dependence variable
+#Train Y
+train_y<-pull(TrainData, Y)
+
+# Test X 
+test_x<- scale(testdata,center = mean_train_x, scale = std_train_x)
+
+# Prediction
+yhat_k1 <- knn(train_x, test_x, train_y, k=n)
+print(yhat_k)
+
+# Calculate Misclassification
+mis_k1 <- mean(test_y!=yhat_k1)
+print(mis)
+
+# Calculate Probabilities
+yhat_k <- knn(train_x, test_x, train_y, k=n, prob = TRUE)
+
+# Create cross table to calculate Sensitivity & Specificity
+table(test_y!=yhat_k1)
+
+# Split the data into 2 parts (Test data & Train data)
+ind<-ifelse(runif(n)<0.7,"Training","Test") #n = row number
+new_train_x<-train_x[ind=="Training",]
+new_test_x<-train_x[ind=="Test",]
+new_train_y<- train_y[ind=="Training"]
+new_test_y<- train_y[ind=="Test"]
+
+# Prediction
+yhat_k_split<-knn(new_train_x,new_test_x,new_train_y,k=n)
+
+# Calculate Misclassification
+mean(yhat_k_split!=new_test_y)
+
+
